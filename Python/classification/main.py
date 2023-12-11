@@ -1,8 +1,8 @@
 import pandas as pd
-import data_load as dl
+import utils
 
 
 
 if __name__ == "__main__":
-    data = dl.load()
+    data = utils.load_data()
     

@@ -1,6 +1,6 @@
 import pandas as pd
 
-def load():
+def load_data():
     data_pd = pd.read_excel("data/Datasets_Group_B.xlsx", "Classification")
     data_np = data_pd.to_numpy()    
     total_size = data_np.shape[0]
