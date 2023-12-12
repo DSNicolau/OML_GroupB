@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 def load_data():
     data_pd = pd.read_excel("data/Datasets_Group_B.xlsx", "Classification")
@@ -12,4 +13,13 @@ def load_data():
     return ((train_data[:, :-1], train_data[:, -1]), 
             (val_data[:, :-1], val_data[:, -1]), 
             (test_data[:, :-1], test_data[:, -1]))
-    
+
+
+def moving_average(data, window_size = 3):
+    i = 0
+    avgs = []
+
+    while i<len(data) - window_size + 1:
+        win = data[]
+def dhsj():
+    return 1
