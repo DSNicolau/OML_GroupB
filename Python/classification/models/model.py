@@ -24,6 +24,6 @@ class Model:
             raise ValueError("Distance type not supported! Please use integer.")
 
         # Minkowski distance
-        return np.power(np.sum(np.power(np.abs(x1 - x2), p)), 1/p)
+        return np.power(np.sum(np.power(np.abs(x1 - x2), p), axis=1), 1/p)
 
             
