@@ -13,6 +13,6 @@ if __name__ == "__main__":
     x_label = np.array([1,1,1,0,0])
     # y = np.array([[4,3,5],[1,5,7]])
     y = np.array([[1,5,7]])
-    knn = models.kNN(1)
+    knn = models.kNN()
     knn.fit(x, x_label)
-    print(knn.predict(y))
+    print(knn.predict(y, 1))
