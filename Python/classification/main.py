@@ -1,8 +1,8 @@
-import pandas as pd
 import utils
-
+import models
+import numpy as np
 
 
 if __name__ == "__main__":
-    data = utils.load_data()
+    train, val, test = utils.load_data()
     
