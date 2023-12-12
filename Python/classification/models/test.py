@@ -56,3 +56,4 @@ print(f"Scikit-learn Predicted Class for the Target Series: {predicted_class_skl
 # Evaluate the classifier
 accuracy = accuracy_score(y_test, knn_classifier.predict(X_test))
 print(f"Accuracy of kNN with DTW: {accuracy}")
+
