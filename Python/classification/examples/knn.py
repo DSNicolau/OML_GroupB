@@ -9,9 +9,7 @@ import numpy as np
 
 if __name__ == "__main__":
     
-    x = np.array([[1,2,3],[4,5,6],[7,8,9], [10,11,12], [1,5,7]])
-    x_label = np.array([1,1,1,0,0])
-    y = np.array([[4,3,5],[1,5,7]])
+    train, val, test = utils.load_data()
     knn = models.kNN()
-    knn.fit(x, x_label)
-    print(knn.predict(y, 1))
+    knn.fit(train[0], train[1])
+    print(knn.predict(train[0], 1))
