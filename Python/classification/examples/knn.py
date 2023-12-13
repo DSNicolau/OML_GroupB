@@ -1,16 +1,19 @@
 import sys
-sys.path.append('Python/classification')
-from sklearn.neighbors import KNeighborsClassifier
+
+sys.path.append("Python/classification/")
 
 import utils
 import models
-import numpy as np
-
+import evaluation
 
 
 if __name__ == "__main__":
-    
     train, val, test = utils.load_data()
     knn = models.kNN()
-    knn.fit(train[0], train[1])
-    predicts = knn.predict(test[0], 1)
+    knn.fit(train[0][:, 5:], train[1])
+    predicts = knn.predict(test[0][:, 5:], 1)
+    cf_matrix = evaluation.confusion_matrix(test[1], predicts)
+    evaluation.displayConfMatrix(
+        cf_matrix,
+        save_name="/home/danielnicolau/Documents/GitHub/OML_GroupB/confusion_matrix_knn1.png",
+    )

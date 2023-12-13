@@ -8,7 +8,7 @@ def load_data():
     # data_pd.fillna( method ='ffill', inplace = True)
     data_np = data_pd.to_numpy()
     total_size = data_np.shape[0]
-    train_size = int(total_size * 0.8)
+    train_size = int(total_size * 0.64)
     val_size = int(total_size * 0.16)
     train_data = data_np[0:train_size, :]
     val_data = data_np[train_size : train_size + val_size, :]
@@ -31,4 +31,3 @@ def moving_average(data, window_size=3):
         i += 1
 
     return avgs
-
