@@ -8,7 +8,7 @@ import evaluation
 
 
 if __name__ == "__main__":
-    train, val, test = utils.load_data()
+    train, val, test = utils.load_data(fill_method="ffill")
     knn = models.kNN()
     knn.fit(train[0][:, 5:], train[1])
     predicts = knn.predict(test[0][:, 5:], 1)

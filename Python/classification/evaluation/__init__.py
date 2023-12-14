@@ -1,2 +1,2 @@
-from .plots import displayConfMatrix
-from .evaluate import confusion_matrix
+from .plots import *
+from .evaluate import *

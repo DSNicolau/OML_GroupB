@@ -2,10 +2,14 @@ import pandas as pd
 import numpy as np
 
 
-def load_data():
+def load_data(fill_method="ffill"):
     data_pd = pd.read_excel("data/Datasets_Group_B.xlsx", "Classification")
-    data_pd.ffill(inplace=True)
-    # data_pd.fillna( method ='ffill', inplace = True)
+    if fill_method == "ffill":
+        data_pd.ffill(inplace=True)
+    elif fill_method == "bfill":
+        data_pd.bfill(inplace=True)
+    elif fill_method == "interpolate":
+        data_pd.interpolate(inplace=True)
     data_np = data_pd.to_numpy()
     total_size = data_np.shape[0]
     train_size = int(total_size * 0.64)
