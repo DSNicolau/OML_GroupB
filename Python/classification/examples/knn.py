@@ -8,12 +8,11 @@ import evaluation
 
 
 if __name__ == "__main__":
-    train, val, test = utils.load_data()
+    train, _, test = utils.load_data()
     knn = models.kNN()
-    knn.fit(train[0][:, 5:], train[1])
-    predicts = knn.predict(test[0][:, 5:], 1)
-    cf_matrix = evaluation.confusion_matrix(test[1], predicts)
-    evaluation.displayConfMatrix(
-        cf_matrix,
-        save_name="/home/danielnicolau/Documents/GitHub/OML_GroupB/confusion_matrix_knn1.png",
-    )
+    train_data, train_label = utils.get_numpy_features(train)
+    knn.fit(train_data, train_label)
+    test_data, test_label = utils.get_numpy_features(test)
+    predicts = knn.predict(test_data, n_neighbours=1)
+    cf_matrix = evaluation.confusion_matrix(test_label, predicts)
+    evaluation.displayConfMatrix(cf_matrix)

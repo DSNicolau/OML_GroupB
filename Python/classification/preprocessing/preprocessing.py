@@ -13,14 +13,14 @@ def get_week_day(data):
     return np.array(weeks)
 
 
-def number_events(x, y, events, mean = False):
+def number_events(x, y, events, mean=False):
     matrix = np.zeros((len(np.unique(x)), len(np.unique(y))))
-    if mean: 
+    if mean:
         total = np.zeros((len(np.unique(x)), len(np.unique(y))))
     for i in range(len(x)):
-        matrix[int(x[i])-1][int(y[i])] += events[i]
+        matrix[int(x[i]) - 1][int(y[i])] += events[i]
         if mean:
-            total[int(x[i])-1][int(y[i])] += 1
+            total[int(x[i]) - 1][int(y[i])] += 1
     if mean:
-        matrix = np.around(matrix/total, decimals=2)
+        matrix = np.around(matrix / total, decimals=2)
     return matrix
