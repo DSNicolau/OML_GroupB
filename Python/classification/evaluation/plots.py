@@ -40,3 +40,23 @@ def displayConfMatrix(cf_matrix, save_name=None):
         plt.savefig(figure_name)
     else:
         plt.show()
+
+
+def displayHeatMap( matrix, x_label=None, y_label=None, x_tick_labels=None, y_tick_labels=None, title="Heat Map", save_name=None):
+    labels = [str(i) for i in matrix.flatten()]
+    labels = np.asarray(labels).reshape(matrix.shape)
+    ax = sns.heatmap(matrix, annot=labels, fmt='', cmap='Blues')
+    ax.set_title(title + "\n\n")
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+
+    if x_tick_labels:
+        ax.set_xticklabels(x_tick_labels)
+    if y_tick_labels:
+        ax.set_yticklabels(y_tick_labels)
+
+    if save_name:
+        figure_name = save_name
+        plt.savefig(figure_name)
+    else:
+        plt.show()

@@ -2,14 +2,18 @@ import pandas as pd
 import numpy as np
 
 
-def load_data(fill_method="ffill"):
+def load_data():
     data_pd = pd.read_excel("data/Datasets_Group_B.xlsx", "Classification")
-    if fill_method == "ffill":
-        data_pd.ffill(inplace=True)
-    elif fill_method == "bfill":
-        data_pd.bfill(inplace=True)
-    elif fill_method == "interpolate":
-        data_pd.interpolate(inplace=True)
+    data_pd.dropna(inplace=True)
+
+    # Beause of the high consecutive number of empty values in our dataset, we won't even interpolate/fill them
+    # if fill_method == "ffill":
+    #     data_pd.ffill(inplace=True)
+    # elif fill_method == "bfill":
+    #     data_pd.bfill(inplace=True)
+    # elif fill_method == "interpolate":
+    #     data_pd.interpolate(inplace=True)
+
     data_np = data_pd.to_numpy()
     total_size = data_np.shape[0]
     train_size = int(total_size * 0.64)

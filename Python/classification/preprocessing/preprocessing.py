@@ -13,11 +13,14 @@ def get_week_day(data):
     return np.array(weeks)
 
 
-def number_events(x, x_name, y, events):
-    # Create a pandas dataframe that counts how many events (motion detections) happen per event x and y
-    data_dict={key: np.zeros(len(np.unique(y))) for key in x_name}
-    translation = {np.unique(x)[i]: x_name[i] for i in range(len(x_name))}
-
+def number_events(x, y, events, mean = False):
+    matrix = np.zeros((len(np.unique(x)), len(np.unique(y))))
+    if mean: 
+        total = np.zeros((len(np.unique(x)), len(np.unique(y))))
     for i in range(len(x)):
-        data_dict[translation[x[i]]][int(np.unique(y)[i])] += events[i]
-    return data_dict
+        matrix[int(x[i])-1][int(y[i])] += events[i]
+        if mean:
+            total[int(x[i])-1][int(y[i])] += 1
+    if mean:
+        matrix = np.around(matrix/total, decimals=2)
+    return matrix
