@@ -24,3 +24,9 @@ def number_events(x, y, events, mean=False):
     if mean:
         matrix = np.around(matrix / total, decimals=2)
     return matrix
+
+def get_fourrier_features(data):
+    fft=[]
+    for feature in np.transpose(data):
+        fft.append(np.fft.fft(feature))
+    return fft
