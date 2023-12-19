@@ -1,5 +1,5 @@
 import sys
-sys.path.append('Python/')
+sys.path.append('Python/classification/')
 from utils import utils
 
 import matplotlib.pyplot as plt

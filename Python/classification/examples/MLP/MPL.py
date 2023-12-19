@@ -18,7 +18,7 @@ import random
 import json
 import datetime
 import sys
-sys.path.append('Python/')
+sys.path.append('Python/classification/')
 from utils import utils
 from utils import Generic_Functions as gf
 from MotionNet import MotionNet

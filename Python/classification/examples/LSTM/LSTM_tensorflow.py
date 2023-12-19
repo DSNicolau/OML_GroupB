@@ -1,5 +1,5 @@
 import sys
-sys.path.append('Python/')
+sys.path.append('Python/classification/')
 import os 
 
 from utils import utils

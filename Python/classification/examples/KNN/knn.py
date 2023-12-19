@@ -2,7 +2,7 @@ import sys
 
 sys.path.append("Python/classification/")
 
-import utils
+from utils import utils
 import models
 import evaluation
 
