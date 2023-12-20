@@ -2,8 +2,8 @@ import plotly.graph_objects as go
 import numpy as np
 
 
-def plot3D(data, clusters=None):
-    if not clusters:
+def plot3D(data, clusters=[np.nan, np.nan]):
+    if all(np.isnan(clusters)):
         clusters = np.zeros(len(data))
     if len(clusters)!= len(data):
         raise ValueError("Data and clusters must be of same length")
