@@ -16,9 +16,12 @@ def objective(trial):
     predicts = knn.predict(test_data, n_neighbours=n_neighbours, distance_type=p)
     cf_matrix = evaluation.confusion_matrix(test_label, predicts)
     evaluation.displayConfMatrix(
-        cf_matrix, save_name="examples/KNN/results/knn_{}.png".format(trial_number)
+        cf_matrix, save_name="KNN/results/knn_{}.png".format(trial_number)
     )
-    return evaluation.evaluate(cf_matrix=cf_matrix)
+    accuracy, precision, recall, f1_score, cohen_kappa = evaluation.evaluate(
+        cf_matrix=cf_matrix
+    )
+    return accuracy, precision, recall, f1_score, cohen_kappa
 
 
 if __name__ == "__main__":
@@ -35,7 +38,7 @@ if __name__ == "__main__":
         study_name="knn_neighbours_p_study",
         load_if_exists=True,
     )
-    study.optimize(objective, n_trials=50)
+    study.optimize(objective, n_trials=30)
     # To then visualize the results on the database:
     # please install optuna-dashboard (pip install optuna-dashboard)
     # move to the directory with the database (Python/classification/examples/)

@@ -46,8 +46,8 @@ def cohen_kappa(cf_matrix):
 
 
 def evaluate(cf_matrix):
-    return (
-        accuracy(cf_matrix),
-        precision_recall_f1_score(cf_matrix),
-        cohen_kappa(cf_matrix),
-    )
+    acc = accuracy(cf_matrix)
+    precision, recall, f1_score = precision_recall_f1_score(cf_matrix)
+    cohen = cohen_kappa(cf_matrix)
+
+    return acc, precision, recall, f1_score, cohen
