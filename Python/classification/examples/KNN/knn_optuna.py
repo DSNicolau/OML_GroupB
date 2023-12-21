@@ -16,7 +16,7 @@ def objective(trial):
     predicts = knn.predict(test_data, n_neighbours=n_neighbours, distance_type=p)
     cf_matrix = evaluation.confusion_matrix(test_label, predicts)
     evaluation.displayConfMatrix(
-        cf_matrix, save_name="examples/KNN/results/knn_{}.png".format(trial_number)
+        cf_matrix, save_name="KNN/results/knn_{}.png".format(trial_number)
     )
     return evaluation.evaluate(cf_matrix=cf_matrix)
 
