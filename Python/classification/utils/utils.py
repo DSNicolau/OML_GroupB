@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 def load_data():
-    data_pd = pd.read_excel("data/Datasets_Group_B.xlsx", "Classification")
+    data_pd = pd.read_excel("data/Datasets_Group_B_v2.xlsx", "Classification")
     data_pd.dropna(inplace=True)
     total_size = len(data_pd)
     train_size = int(total_size * 0.64)
@@ -30,7 +30,7 @@ def moving_average(data, window_size=3):
     return avgs
 
 def load_data_v2():
-    data_pd = pd.read_excel("data/Datasets_Group_B.xlsx", "Classification")
+    data_pd = pd.read_excel("data/Datasets_Group_B_v2.xlsx", "Classification")
     # data_pd.fillna(method='ffill', inplace=True)
     data_pd.dropna(inplace=True)
     data_np = data_pd.to_numpy()

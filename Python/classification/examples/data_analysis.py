@@ -12,6 +12,7 @@ if __name__ == "__main__":
     train_data, train_label = utils.get_numpy_features(train)
     val_data, val_label = utils.get_numpy_features(val)
     test_data, test_label = utils.get_numpy_features(test)
+    print('ah')
     # x = preprocessing.mutual_information(train[0][:, 5:], train[1])
     weeks = preprocessing.get_week_day(train_data)
     df_heatmap = preprocessing.number_events(
