@@ -3,14 +3,14 @@ class Model:
     def __init__(self):
         pass
 
-    def fit(self, x_train, y_train):
-        self.x_train = x_train
-        self.y_train = y_train
+    def fit(self, data, **kwargs):
+        raise NotImplementedError
 
     def predict(self):
         raise NotImplementedError
 
-    def distance(self, x1, x2, p="euclidean"):
+    @staticmethod
+    def distance(self, x1, x2, p="euclidean", **kwargs):
         distance = {"manhattan": 1, "euclidean": 2}
         if isinstance(p, str):
             try:
