@@ -25,11 +25,11 @@ def objective(trial):
 
 
 if __name__ == "__main__":
-    train, _, test = utils.load_data()
+    train, _, test = utils.load_data(normalize=True)
     knn = models.kNN()
-    train_data, train_label = utils.get_numpy_features(train)
+    train_data, train_label = utils.get_numpy_features(train, no_time=True)
     knn.fit(train_data, train_label)
-    test_data, test_label = utils.get_numpy_features(test)
+    test_data, test_label = utils.get_numpy_features(test, no_time=True)
     # Change this path to the path you wish your database to be stored
     os.chdir("Python/classification/examples/")
     study = optuna.create_study(
