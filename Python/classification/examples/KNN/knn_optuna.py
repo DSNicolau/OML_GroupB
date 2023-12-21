@@ -10,7 +10,7 @@ import os
 
 
 def objective(trial):
-    n_neighbours = trial.suggest_int("n_neighbours", 1, len(test_label))
+    n_neighbours = trial.suggest_int("n_neighbours", 1, 500)
     p = trial.suggest_int("p", 1, 20)
     trial_number = trial.number
     predicts = knn.predict(test_data, n_neighbours=n_neighbours, distance_type=p)
@@ -38,7 +38,7 @@ if __name__ == "__main__":
         study_name="knn_neighbours_p_study",
         load_if_exists=True,
     )
-    study.optimize(objective, n_trials=30)
+    study.optimize(objective, n_trials=40)
     # To then visualize the results on the database:
     # please install optuna-dashboard (pip install optuna-dashboard)
     # move to the directory with the database (Python/classification/examples/)
