@@ -9,14 +9,13 @@ import evaluation
 
 if __name__ == "__main__":
     train, val, test = utils.load_data()
-    train_data, train_label = utils.get_numpy_features(train)
-    val_data, val_label = utils.get_numpy_features(val)
-    test_data, test_label = utils.get_numpy_features(test)
-    print('ah')
+    train_data, train_label = utils.get_numpy_features(train, no_time=False)
+    val_data, val_label = utils.get_numpy_features(val, no_time=False)
+    test_data, test_label = utils.get_numpy_features(test, no_time=False)
     # x = preprocessing.mutual_information(train[0][:, 5:], train[1])
-    weeks = preprocessing.get_week_day(train_data)
+    weeks = preprocessing.get_week_day(test_data)
     df_heatmap = preprocessing.number_events(
-        x=weeks, y=train_data[:, 3], events=train_label, mean=True
+        x=weeks, y=test_data[:, 3], events=test_label, mean=True
     )
     weeks_name = [
         "Monday",
