@@ -17,7 +17,7 @@ if __name__ == "__main__":
         filter_type="cheby2",
         filter_order=5,
         rs=30,
-        cutoff_frequency=1 / (2 * 24 * 60),
+        cutoff_frequency=1 / (24 * 60),
     )
     filtered_train_butter = preprocessing.filter_day_periodicity(
         train_data,
