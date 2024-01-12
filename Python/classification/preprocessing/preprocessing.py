@@ -52,7 +52,7 @@ def filter_day_periodicity(
         )
         for i in range(data.shape[1]):
             filtered_data[:, i] = signal.sosfilt(sos, data[:, i])
-    elif filter_type=="ellip":
+    # elif filter_type=="ellip":
         
     else:
         raise NotImplementedError("Filter type not implemented.")
