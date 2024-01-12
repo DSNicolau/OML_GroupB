@@ -7,12 +7,23 @@ from models.model import Model
 
 class K_Means(Model):
     
-    def __init__(self, random_seed=None):
+    def __init__(self, random_seed=None, distance_p_norm=2):
+        """Initializes K-Means object
+
+        Args:
+            random_seed (int, optional): Random seed for reproducibility. If passed, the model will produce the same results across different runs. Defaults to None.
+            distance_p_norm (int or str, optional): p-norm. Defaults to 2.
+
+        Raises:
+            ValueError: If random_seed is not an integer
+        """
         super().__init__()
         if random_seed is not None:
             if not isinstance(random_seed, int):
                 raise ValueError("Random seed must be an integer.")
-            self.random_seed = random_seed
+        
+        self.random_seed = random_seed
+        self.distance_p_norm = distance_p_norm        
     
     def initialize_centroids(self):
         """returns k centroids from the initial points"""
@@ -21,7 +32,21 @@ class K_Means(Model):
         return centroids[:self.k]
 
     @staticmethod
-    def distance(x1, x2, p="euclidean", **kwargs):
+    def distance(x1, x2, p : int or str ="euclidean", **kwargs):
+        """ Calculates the p-norm distance between two row vectors
+
+        Args:
+            x1 (numpy.ndarray): input vector
+            x2 (numpy.ndarray): input vector
+            p (int or str, optional): p-norm. Defaults to "euclidean".
+
+        Raises:
+            ValueError: _p-norm must be an integer
+            ValueError: _p-norm must be either manhattan or euclidean
+
+        Returns:
+            _type_: numpy.ndarray
+        """
         if kwargs.get("axis") is not None:
             axis = kwargs.get("axis")
         else:
@@ -44,9 +69,12 @@ class K_Means(Model):
 
     def closest_centroid(self):
         """returns an array containing the index to the nearest centroid for each point"""
-        distances = np.sqrt(((self.points - self.centroids[:, np.newaxis])**2).sum(axis=2))
-        # distances = distance(points, centroids[:, np.newaxis], p=2, axis=2)
+        distances = K_Means.distance(self.points, self.centroids[:, np.newaxis], p=self.distance_p_norm, axis=2)
         return np.argmin(distances, axis=0)
+
+    def cluster_menbers(self):
+        """returns an array containing the points for each cluster"""
+        return np.array([self.points[self.closest==k] for k in range(self.centroids.shape[0])])
 
     def move_centroids(self):
         """returns the new centroids assigned from the points closest to them"""
@@ -54,8 +82,7 @@ class K_Means(Model):
 
     def clusters_variance(self):
         """returns the variance for each cluster"""
-        # return np.array([np.sqrt(((points[closest==k] - centroids[k])**2).sum(axis=1)).var(axis=0) for k in range(centroids.shape[0])])
-        return np.sum([K_Means.distance(self.points[self.closest==k], self.centroids[k], p=2).var(axis=0) for k in range(self.centroids.shape[0])])
+        return np.sum([K_Means.distance(self.points[self.closest==k], self.centroids[k], p=self.distance_p_norm).var(axis=0) for k in range(self.centroids.shape[0])])
 
     def fit(self, points, k, num_trials):
         """returns the best set of centroids found by running the algorithm num_trials times
@@ -79,6 +106,7 @@ class K_Means(Model):
 
 
         for i in range(num_trials):
+            print("Starting Trial: %d..." % (i))
             self.centroids = self.initialize_centroids()
             last_centroids = np.zeros_like(self.centroids) + np.inf
 
@@ -89,8 +117,10 @@ class K_Means(Model):
                 
             total_variance = self.clusters_variance()
             self.trial_variances[i] = total_variance
-            self.trial_centroids[i] = self.centroids
+            self.trial_centroids[i] = self.centroids            
             
         self.best_trial_idx = np.argmin(self.trial_variances)
         self.centroids = self.trial_centroids[self.best_trial_idx]
+        print("Best Trial: %d" % (self.best_trial_idx))
+        print("Fitting Done!")
         return self.centroids
