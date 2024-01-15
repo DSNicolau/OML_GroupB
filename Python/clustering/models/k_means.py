@@ -82,7 +82,7 @@ class K_Means(Model):
 
     def clusters_variance(self):
         """returns the variance for each cluster"""
-        return np.sum([K_Means.distance(self.points[self.closest==k], self.centroids[k], p=self.distance_p_norm).var(axis=0) for k in range(self.centroids.shape[0])])
+        return np.mean([K_Means.distance(self.points[self.closest==k], self.centroids[k], p=self.distance_p_norm).var(axis=0) for k in range(self.centroids.shape[0])])
 
     def fit(self, points, k, num_trials):
         """returns the best set of centroids found by running the algorithm num_trials times
