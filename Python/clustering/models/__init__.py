@@ -1,2 +1,2 @@
 from .model import *
-from .hierarchical_clustering import *
+from .mean_shift import *
