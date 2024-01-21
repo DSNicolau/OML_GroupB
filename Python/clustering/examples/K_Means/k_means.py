@@ -27,10 +27,10 @@ from sklearn.cluster import KMeans
 import numpy as np
 
 def objective_v2(trial):
-    trial_num_trials = 100
+    num_trials = 250
     trial_k = trial.suggest_int('k', 1, 100, log=False)
     
-    kmeans = KMeans(n_clusters=trial_k, random_state=0, n_init="auto", max_iter=trial_num_trials).fit(points)
+    kmeans = KMeans(n_clusters=trial_k, random_state=seed, n_init=num_trials, max_iter=1000).fit(points)
     
     closest_clusters = kmeans.predict(points)
     clusters = kmeans.cluster_centers_
@@ -51,7 +51,7 @@ def objective(trial):
     return min_variance
 
 # studyName = "OML_K_Means_k_study_Test_vScikitLearn_5"
-studyName = "OML_K_Means_k_study_Test_v2"
+studyName = "OML_K_Means_k_study"
 
 study = optuna.create_study(
                             # directions=['maximize', 'maximize'],
@@ -60,10 +60,10 @@ study = optuna.create_study(
                             storage="sqlite:///OML_Database.db",
                             study_name=studyName, load_if_exists=True)
 
-for i in range(1, 101):
-    study.enqueue_trial({"k": i})
+# for i in range(1, 101):
+#     study.enqueue_trial({"k": i})
 
-study.optimize(objective, n_trials=100)
+study.optimize(objective_v2, n_trials=50)
 
 # variations = 1
 
