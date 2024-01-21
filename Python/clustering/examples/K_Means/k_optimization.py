@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 
 import optuna 
 
-studyName = "OML_K_Means_k_study_Test_v2"
+studyName = "OML_K_Means_k_study"
 
 study = optuna.create_study(
                             # directions=['maximize', 'maximize'],
@@ -14,29 +14,32 @@ study = optuna.create_study(
 
 trials_df = study.trials_dataframe()
 print(trials_df)
-x = trials_df["params_k"]
-variations = trials_df["value"]
+x = trials_df["params_k"][trials_df["state"] == "COMPLETE"]
+variations = trials_df["value"][trials_df["state"] == "COMPLETE"]
 
-x = x/68
-variations = variations/np.max(variations)
-
-def find_best_k(variations, x, x_0, lamda):
-    d_variations_dk = np.diff(variations)
-    # score = (1/variations[1:])*(-d_variations_dk)*np.exp((-(x[1:]-x_0)/lamda))
-    score = np.sqrt(variations**2 + (x**2))
+def find_best_k(y, x):
+    d_y_dk = np.diff(y)
+    d_y_dk_abs = np.abs(d_y_dk)
+    x_limit = np.argmin(d_y_dk_abs) + 1
+    y_limit = np.max(y)
+    # Print Limits
+    print("x_limit:", x_limit)
+    print("y_limit:", y_limit)
+    x_normalized = x/x_limit
+    y_normalized = y/y_limit
+    score = np.sqrt(x_normalized**2 + y_normalized**2)
     return score
 
-lamda = 15
-num_min_clusters = 5
-score = find_best_k(variations, x, num_min_clusters, lamda)
+score = find_best_k(variations, x)
 best = np.argmin(score)
 colors = np.zeros_like(score)
 colors[best] = 1
 # Create scatter plot
 fig = go.Figure(data=go.Scatter(
     # x=x[1:],
-    x=x*68,
+    x=x,
     y=score,    
+    # y=np.diff(variations),    
     # mode='lines+markers',
     mode='markers',
     marker=dict(
@@ -44,7 +47,7 @@ fig = go.Figure(data=go.Scatter(
         color=colors,                # set color to an array/list of desired values
         colorscale="Bluered",   # choose a colorscale
         colorbar=dict(title="Variation Score"),
-        showscale=True
+        showscale=False
     ),
     # marker=dict(
     #     size=8,
@@ -55,12 +58,11 @@ fig = go.Figure(data=go.Scatter(
 
 fig.update_layout(
     title="",
-    xaxis_title="Number of Clusters",
-    # yaxis_title="Execution Time (s)",
-    # yaxis_title="Number of Prototypes",
-    yaxis_title="Score",
+    xaxis_title="Number of Clusters (k)",
+    yaxis_title="Euclidean Error",
+    # yaxis_title="Mean Intra Cluster Variance",
+    # yaxis_title="$${ \Huge {\partial \sigma^2}/{\partial k} }$$",
     font=dict(
-        # family="'CMU Serif Extra', sans-serif",
         family='CMU Serif Extra',
         size=35
     ), 
