@@ -42,6 +42,8 @@ def cohen_kappa(cf_matrix):
     fp = cf_matrix[0][1]
     fn = cf_matrix[1][0]
     tn = cf_matrix[0][0]
+    if (tp + fp) * (tp + fn) * (tn + fp) * (tn + fn) == 0:
+        return 0
     return 2 * (tp * tn - fp * fn) / ((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
 
 

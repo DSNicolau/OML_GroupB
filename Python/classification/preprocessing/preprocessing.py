@@ -1,7 +1,8 @@
 import datetime
 import numpy as np
-import scipy
 from scipy import signal
+import pandas as pd
+from statsmodels.tsa.seasonal import seasonal_decompose
 
 
 def get_week_day(data):
@@ -25,6 +26,14 @@ def number_events(x, y, events, mean=False):
     if mean:
         matrix = np.around(matrix / total, decimals=2)
     return matrix
+
+
+def normalise_time(data):
+    for i in range(data.shape[1]):
+        data[:, i] = (data[:, i] - np.min(data[:, i])) / (
+            np.max(data[:, i]) - np.min(data[:, i])
+        )
+    return data
 
 
 def filter_day_periodicity(
@@ -52,8 +61,23 @@ def filter_day_periodicity(
         )
         for i in range(data.shape[1]):
             filtered_data[:, i] = signal.sosfilt(sos, data[:, i])
-    # elif filter_type=="ellip":
         
     else:
         raise NotImplementedError("Filter type not implemented.")
     return filtered_data
+
+
+def remove_trend_seasonal(data, periodicity = int(60*24), model = "additive"): # 60 minutes * 24 hours
+    datax = pd.DataFrame()
+    data_return = pd.DataFrame()
+    for i in data:
+        if i in ['Year', 'Month', 'Day', 'Hour', 'Minute', 'Week', 'Motion Detection']:
+            data_return[i] = data[i]
+            continue
+        flipped_first_values = np.flip(data[i].head(periodicity).values)[int(periodicity/2):]
+        flipped_last_values = np.flip(data[i].tail(periodicity).values)[:int(periodicity/2)]
+        datax[i] = np.concatenate([flipped_first_values, data[i].values, flipped_last_values])
+        result = seasonal_decompose(datax[i], model=model, period=periodicity)
+        residual = result.resid.dropna().reset_index(drop=True)
+        data_return[i] = residual
+    return data_return

@@ -1,16 +1,21 @@
 import pandas as pd
 import numpy as np
+from preprocessing import remove_trend_seasonal
 
 
-def load_data(normalize=False):
+def load_data(normalize=False, rmv_trend_seasonal=False):
     data_pd = pd.read_excel("data/Datasets_Group_B_v2.xlsx", "Classification")
     data_pd.dropna(inplace=True)
     total_size = len(data_pd)
     train_size = int(total_size * 0.64)
     val_size = int(total_size * 0.16)
-    train_data = data_pd.iloc[:train_size]
-    val_data = data_pd.iloc[train_size : train_size + val_size]
-    test_data = data_pd.iloc[train_size + val_size :]
+    train_data = data_pd.iloc[:train_size].reset_index(drop=True)
+    val_data = data_pd.iloc[train_size : train_size + val_size].reset_index(drop=True)
+    test_data = data_pd.iloc[train_size + val_size :].reset_index(drop=True)
+    if rmv_trend_seasonal:
+        train_data = remove_trend_seasonal(train_data)
+        val_data = remove_trend_seasonal(val_data)
+        test_data = remove_trend_seasonal(test_data)
     if normalize:
         train_data.iloc[:, 5:-1], min_values, max_values = min_max_normalization_pandas(
             train_data.iloc[:, 5:-1]
