@@ -4,7 +4,7 @@ sys.path.append("Python/clustering/")
 
 from utils import utils
 from sklearn.cluster import AgglomerativeClustering
-from evaluation import plot_Silhouette, plot_Dendogram
+from evaluation import plot_Silhouette
 from sklearn.metrics import silhouette_score
 
 
