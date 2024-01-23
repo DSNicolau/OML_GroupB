@@ -9,6 +9,7 @@ import optuna
 import os
 
 
+
 def objective(trial):
     n_clusters = trial.suggest_int("n_clusters", 1, 200)
     clustering = AgglomerativeClustering(n_clusters=n_clusters).fit(data_np)

@@ -37,17 +37,9 @@ def accuracy(cf_matrix):
     return (tp + tn) / (tp + tn + fp + fn)
 
 
-def cohen_kappa(cf_matrix):
-    tp = cf_matrix[1][1]
-    fp = cf_matrix[0][1]
-    fn = cf_matrix[1][0]
-    tn = cf_matrix[0][0]
-    return 2 * (tp * tn - fp * fn) / ((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
-
-
 def evaluate(cf_matrix):
     acc = accuracy(cf_matrix)
     precision, recall, f1_score = precision_recall_f1_score(cf_matrix)
-    cohen = cohen_kappa(cf_matrix)
 
-    return acc, precision, recall, f1_score, cohen
+
+    return acc, precision, recall, f1_score
