@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
-from preprocessing import remove_trend_seasonal
+from preprocessing import remove_trend_seasonal, get_week_day, filter_day_periodicity
 
 
-def load_data(normalize=False, rmv_trend_seasonal=False):
+def load_data(normalize=False, rmv_trend_seasonal=False, normalise_time=False, filt = None):
     data_pd = pd.read_excel("data/Datasets_Group_B_v2.xlsx", "Classification")
     data_pd.dropna(inplace=True)
     total_size = len(data_pd)
@@ -12,6 +12,33 @@ def load_data(normalize=False, rmv_trend_seasonal=False):
     train_data = data_pd.iloc[:train_size].reset_index(drop=True)
     val_data = data_pd.iloc[train_size : train_size + val_size].reset_index(drop=True)
     test_data = data_pd.iloc[train_size + val_size :].reset_index(drop=True)
+    if filt:
+        filtered_train = filter_day_periodicity(
+            train_data.iloc[:, 5:-1].to_numpy(),
+            filter_type=filt,
+            filter_order=5,
+            rs=30,
+            cutoff_frequency=1 / (24 * 60),
+        )
+        train_data.iloc[:, 5:-1] = filtered_train
+
+        filtered_test = filter_day_periodicity(
+            test_data.iloc[:, 5:-1].to_numpy(),
+            filter_type=filt,
+            filter_order=5,
+            rs=30,
+            cutoff_frequency=1 / (24 * 60),
+        )
+        test_data.iloc[:, 5:-1] = filtered_test
+
+        filtered_val = filter_day_periodicity(
+            val_data.iloc[:, 5:-1].to_numpy(),
+            filter_type=filt,
+            filter_order=5,
+            rs=30,
+            cutoff_frequency=1 / (24 * 60),
+        )
+        val_data.iloc[:, 5:-1] = filtered_val
     if rmv_trend_seasonal:
         train_data = remove_trend_seasonal(train_data)
         val_data = remove_trend_seasonal(val_data)
@@ -26,6 +53,25 @@ def load_data(normalize=False, rmv_trend_seasonal=False):
         test_data.iloc[:, 5:-1] = min_max_normalization_pandas(
             test_data.iloc[:, 5:-1], min_values, max_values
         )
+    if normalise_time:
+        train_np, _ = get_numpy_features(train_data, no_time=False)
+        val_np, _ = get_numpy_features(val_data, no_time=False)
+        test_np, _ = get_numpy_features(test_data, no_time=False)
+
+        train_data['Weeks'] = get_week_day(train_np)
+        val_data['Weeks'] = get_week_day(val_np)
+        test_data['Weeks'] = get_week_day(test_np)
+        train_data.drop(columns=['Year', 'Month', 'Day'], inplace=True)
+        val_data.drop(columns=['Year', 'Month', 'Day'], inplace=True)
+        test_data.drop(columns=['Year', 'Month', 'Day'], inplace=True)
+        norms = [[1,7],[0,23],[0,59]]
+        to_normalize = ['Weeks','Hour','Minute']
+        for i in range(3):
+            train_data[to_normalize[i]] = min_max_normalization_pandas(train_data[to_normalize[i]], min_values=norms[i][0], max_values=norms[i][1])
+            val_data[to_normalize[i]] = min_max_normalization_pandas(val_data[to_normalize[i]], min_values=norms[i][0], max_values=norms[i][1])
+            test_data[to_normalize[i]] = min_max_normalization_pandas(test_data[to_normalize[i]], min_values=norms[i][0], max_values=norms[i][1])
+    
+
 
     return train_data, val_data, test_data
 

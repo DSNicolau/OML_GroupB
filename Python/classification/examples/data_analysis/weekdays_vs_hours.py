@@ -4,7 +4,6 @@ sys.path.append("Python/classification/")
 
 import utils
 import preprocessing
-import seaborn as sns
 import evaluation
 
 
