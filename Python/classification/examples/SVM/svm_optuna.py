@@ -41,7 +41,7 @@ if __name__ == "__main__":
     os.chdir("Python/classification/examples/")
     study = optuna.create_study(
         directions=["maximize", "maximize", "maximize", "maximize"],
-        storage="sqlite:///optuna_study.db",
+        storage="sqlite:///optuna_studies.db",
         study_name="svm_poly_rbf_sigmoid_study",
         load_if_exists=True,
     )

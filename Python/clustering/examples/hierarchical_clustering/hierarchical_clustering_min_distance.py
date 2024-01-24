@@ -10,7 +10,7 @@ from sklearn.metrics import silhouette_score
 
 
 def hierarchical_clustering(n_clusters, data_np):
-    clustering = AgglomerativeClustering(n_clusters=n_clusters).fit(data_np)
+    clustering = AgglomerativeClustering(n_clusters=n_clusters, linkage="average").fit(data_np)
     cluster_labels = clustering.labels_
     silhouette = 0
     if n_clusters > 1:

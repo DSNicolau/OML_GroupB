@@ -12,9 +12,9 @@ if __name__ == "__main__":
     train_data, train_label = utils.get_numpy_features(train, no_time=False)
     val_data, val_label = utils.get_numpy_features(val, no_time=False)
     test_data, test_label = utils.get_numpy_features(test, no_time=False)
-    weeks = preprocessing.get_week_day(train_data)
+    weeks = preprocessing.get_week_day(test_data)
     df_heatmap = preprocessing.number_events(
-        x=weeks, y=train_data[:, 3], events=train_label, mean=True
+        x=weeks, y=test_data[:, 3], events=test_label, mean=True
     )
     weeks_name = [
         "Monday",
@@ -30,5 +30,5 @@ if __name__ == "__main__":
         x_label="Hours",
         y_label="Week day",
         y_tick_labels=weeks_name,
-        title="Average hourly events per weekday - Train set",
+        title="Average hourly events per weekday - Test set",
     )
