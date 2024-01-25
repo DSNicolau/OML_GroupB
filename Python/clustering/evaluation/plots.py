@@ -6,6 +6,39 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
 
+def plot3D(data, clusters=[np.nan, np.nan]):
+    if all(np.isnan(clusters)):
+        clusters = np.zeros(len(data))
+    if len(clusters)!= len(data):
+        raise ValueError("Data and clusters must be of same length")
+    labels = data.keys()
+    fig = go.Figure(
+        data=[
+            go.Scatter3d(
+                x=data[labels[0]],
+                y=data[labels[1]],
+                z=data[labels[2]],
+                mode="markers",
+                marker=dict(
+                    size=1,
+                    color=clusters,
+                    colorscale="Viridis",
+                    opacity=0.8,
+                    colorbar=dict(thickness=40, title="Clustering Data"),
+                ),
+            )
+        ]
+    )
+
+    fig.update_layout(
+        scene=dict(
+            xaxis_title=labels[0],
+            yaxis_title=labels[1],
+            zaxis_title=labels[2],
+        )
+    )
+    fig.show()
+
 def plot3D_numpy(data : numpy.ndarray, 
                  axis_labels : list = None, 
                  title : str = None, 
@@ -110,4 +143,77 @@ def plot_Silhouette(
     ax.set_xticks([-0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8])
     plt.savefig("silhouette.png")
     
-    
+def plot_Scatter(x, y, xlabel, ylabel, colors, title=""):
+    fig = go.Figure(
+        data=go.Scatter(
+            x=x,
+            y=y,
+            mode="markers",
+            marker=dict(
+                size=8,
+                color=colors,  # set color to an array/list of desired values
+                colorscale="Bluered",  # choose a colorscale
+            )
+            if not np.all(colors == 0)
+            else dict(
+                size=8,
+                color="blue",  # set color to a single value
+            ),
+            line=dict(color="navy", width=2),
+        )
+    )
+
+    fig.update_layout(
+        title=title,
+        xaxis_title=xlabel,
+        yaxis_title=ylabel,
+        font=dict(family="CMU Serif Extra", size=35),
+        plot_bgcolor="rgba(0,0,0,0)",
+    )
+
+    fig.update_xaxes(
+        color="black",
+        showgrid=True,
+        gridwidth=1,
+        gridcolor="gainsboro",
+        zeroline=True,
+        zerolinecolor="black",
+    )
+    fig.update_yaxes(
+        color="black",
+        zeroline=True,
+        zerolinecolor="black",
+        showgrid=True,
+        gridwidth=1,
+        gridcolor="gainsboro",
+    )
+
+    fig.show()
+
+
+def plot_Dendogram(data, color_threshold, title=""):
+    fig = ff.create_dendrogram(data, color_threshold=color_threshold)
+    fig.update_layout(
+        title=title,
+        font=dict(family="CMU Serif Extra", size=35),
+        plot_bgcolor="rgba(0,0,0,0)",
+    )
+
+    fig.update_xaxes(
+        color="black",
+        showgrid=True,
+        gridwidth=1,
+        gridcolor="gainsboro",
+        zeroline=True,
+        zerolinecolor="black",
+    )
+    fig.update_yaxes(
+        color="black",
+        zeroline=True,
+        zerolinecolor="black",
+        showgrid=True,
+        gridwidth=1,
+        gridcolor="gainsboro",
+    )
+
+    fig.show()
