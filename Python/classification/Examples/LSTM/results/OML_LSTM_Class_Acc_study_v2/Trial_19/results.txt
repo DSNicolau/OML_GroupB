@@ -1,7 +1,0 @@
-Test Results: 
-
-Accuracy: 0.484383482320582
-Precision: 0.484383482320582
-Recall: 1.0
-F1: 0.6526392783128124
-Cohen Kappa: 0.0
