@@ -8,6 +8,11 @@ import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
 
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import cohen_kappa_score
 from sklearn.metrics import confusion_matrix
 
 import tensorflow as tf
@@ -19,7 +24,7 @@ if len(physical_devices) > 0:
         tf.config.experimental.set_virtual_device_configuration(device, [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=8000)])
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.layers import LSTM, Dense, Softmax
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 
 import optuna
@@ -122,7 +127,7 @@ def f_score(y_true, y_pred):
     return (1 + B**2) * (precision * recall) / ((B**2) * precision + recall)
     
 
-data = utils.load_data()
+data = utils.load_data_v2()
 train_data, val_data, test_data = data
 train_x, train_y = train_data
 val_x, val_y = val_data
@@ -186,6 +191,7 @@ def objective(trial):
     units_lstm_hidden = trial.suggest_int('units_lstm_hidden', 16, 256, log=False)
     seq_length = trial.suggest_int('seq_length', 1, 30, log=False)
     learning_rate = trial.suggest_float('learning_rate', 1e-8, 1e-1, log=True)
+    batch_size = trial.suggest_int('batch_size', 32, 2048, log=False)
     # focal_alpha = trial.suggest_float('focal_alpha', 0.8, 1, log=True)
     
     # Scaling by total/2 helps keep the loss to a similar magnitude.
@@ -204,7 +210,7 @@ def objective(trial):
     
     # Constant parameters
     seed = 123
-    batch_size = 2048
+    # batch_size = 2048
     num_epochs = 100
     focal_gamma = 2.0
 
@@ -215,14 +221,14 @@ def objective(trial):
     # Create sequences for test set
     X_test, y_test = create_sequences(test_x, test_y, seq_length)
     
-    # Balance dataset
-    print("Balancing dataset...")
-    print("Training set:")
-    X_train, y_train = balance_dataset(X_train, y_train, rate_pos=0.5)
-    print("Validation set:")
-    X_val, y_val = balance_dataset(X_val, y_val, rate_pos=0.5)
-    print("Test set:")
-    X_test, y_test = balance_dataset(X_test, y_test, rate_pos=0.5)
+    # # Balance dataset
+    # print("Balancing dataset...")
+    # print("Training set:")
+    # X_train, y_train = balance_dataset(X_train, y_train, rate_pos=0.5)
+    # print("Validation set:")
+    # X_val, y_val = balance_dataset(X_val, y_val, rate_pos=0.5)
+    # print("Test set:")
+    # X_test, y_test = balance_dataset(X_test, y_test, rate_pos=0.5)
 
     # Create tensorflow datasets
     train_ds = tf.data.Dataset.from_tensor_slices((X_train, y_train))
@@ -250,7 +256,7 @@ def objective(trial):
     random.seed(seed)
 
     # Building the LSTM Model
-    with tf.device('/device:GPU:1'):
+    with tf.device('/device:GPU:0'):
         model = Sequential()        
         model.add(LSTM(units=units_lstm_in, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2]), 
                     kernel_initializer=tf.keras.initializers.GlorotUniform(seed=random.randint(0, 1000)), 
@@ -260,6 +266,7 @@ def objective(trial):
                         kernel_initializer=tf.keras.initializers.GlorotUniform(seed=random.randint(0, 1000)), 
                         recurrent_initializer=tf.keras.initializers.Orthogonal(gain=1.0, seed=random.randint(0, 1000))))
         model.add(Dense(units=1, activation="sigmoid", kernel_initializer=tf.keras.initializers.GlorotUniform(seed=random.randint(0, 1000))))
+        
 
         optimizer = keras.optimizers.experimental.Adam(learning_rate=learning_rate)
         
@@ -298,7 +305,10 @@ def objective(trial):
         # Reduce learning rate when perf metric stopped improving. (https://keras.io/api/callbacks/reduce_lr_on_plateau/)
         LR = ReduceLROnPlateau(monitor=monitor, factor=0.01, patience=5, cooldown=4, verbose=1,mode=mode,min_delta=0.0001)
         
-        callbacks_list = [checkpoint, LR, Earlystop] 
+        log_dir = "/nfs/home/nvasconcellos.it/softLinkTests/Optimizacao/OML_GroupB/Python/classification/Examples/LSTM/results/TensorBoard/%s/Trial_%d" % (studyName, trial.number)
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+        
+        callbacks_list = [checkpoint, LR, Earlystop, tensorboard_callback] 
 
         # history = model.fit(X_train, y_train, validation_data=(X_val, y_val), 
         #                     epochs=20, batch_size=2046, 
@@ -313,49 +323,52 @@ def objective(trial):
                             callbacks=callbacks_list, verbose=1)
 
 
-        plot_metrics(history, results_dir)
+        # plot_metrics(history, results_dir)
         
-        y_pred = model.predict(X_val)
+        y_pred = model.predict(X_test)
         print("y_pred shape: ", y_pred.shape)
-        print("val_y shape: ", val_y.shape)
+        print("test_y shape: ", test_y.shape)
         y_pred[y_pred > 0.5] = 1
         y_pred[y_pred <= 0.5] = 0
-        y_val = np.expand_dims(y_val, axis=-1)
+        # y_pred = np.argmax(y_pred, axis=1)
+        y_test = np.expand_dims(y_test, axis=-1)
 
         y_pred = y_pred[:, -1, 0]
-        y_val = y_val[:, -1, 0]
+        y_test = y_test[:, -1, 0]
         print("y_pred.shape: ", y_pred.shape)
-        print("y_val.shape: ", y_val.shape)
+        print("y_test.shape: ", y_test.shape)
 
-        manual_accuracy = np.mean((y_pred == y_val))
-        print("Manual accuracy: ", manual_accuracy)
-        manual_f_score = f_score(y_val, y_pred)
-        print("Manual f_score: ", manual_f_score)
+        accuracy = accuracy_score(y_test, y_pred)
+        precision = precision_score(y_test, y_pred)
+        recall = recall_score(y_test, y_pred)
+        f1 = f1_score(y_test, y_pred)
+        cohen_kappa = cohen_kappa_score(y_test, y_pred)
+        cf_matrix = confusion_matrix(y_test, y_pred)
 
-        y_pred = y_pred.reshape((-1))
-        y_val = y_val.reshape((-1))
-        print("y_pred.shape: ", y_pred.shape)
-        print("y_val.shape: ", y_val.shape)
-        print("min y_pred: ", np.min(y_pred))
-        print("max y_pred: ", np.max(y_pred))
-        print("min y_val: ", np.min(y_val))
-        print("max y_val: ", np.max(y_val))
-        cf_matrix = confusion_matrix(y_val, y_pred)
         displayConfMatrix(cf_matrix, results_dir)
+
+        with open(results_dir + '/results.txt', 'w') as f:
+            f.write("Test Results: \n\n")
+            f.write("Accuracy: " + str(accuracy) + "\n")
+            f.write("Precision: " + str(precision) + "\n")
+            f.write("Recall: " + str(recall) + "\n")
+            f.write("F1: " + str(f1) + "\n")
+            f.write("Cohen Kappa: " + str(cohen_kappa) + "\n")
         
-        best_f_score = max(history.history['val_f_score'])
-        idx_best_f_score = np.argmax(history.history['val_f_score'])
-        accuracy = history.history['val_accuracy'][idx_best_f_score]
+        # best_f_score = max(history.history['val_f_score'])
+        # idx_best_f_score = np.argmax(history.history['val_f_score'])
+        # accuracy = history.history['val_accuracy'][idx_best_f_score]
         # return best_f_score, accuracy
-        return accuracy
+        best_val_acc = max(history.history['val_accuracy'])
+        return best_val_acc
 
 # studyName = "OML_LSTM_Class_Oversampling_Acc&F1-Score_study_v2"
-studyName = "OML_LSTM_Class_Oversampling_Acc_study"
+studyName = "OML_LSTM_Class_Acc_study_v2"
 
 study = optuna.create_study(
                             # directions=['maximize', 'maximize'],
                             direction='maximize',
-                            storage="sqlite:////nfs/home/nvasconcellos.it/softLinkTests/xDNN_test.db",
+                            storage="sqlite:///OML_Database.db",
                             study_name=studyName, load_if_exists=True)
 
 study.optimize(objective, n_trials=100)
