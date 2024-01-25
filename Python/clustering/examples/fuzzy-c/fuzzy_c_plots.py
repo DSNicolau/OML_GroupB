@@ -18,7 +18,7 @@ def fuzzy_clustering(n_clusters, data_np):
     if n_clusters > 1:
         silhouette = silhouette_score(data_np, cluster_labels)
     variances = []
-    for cluster_id in range(n_clusters):  # Assuming 5 clusters
+    for cluster_id in range(n_clusters):  
         cluster_points = data_np[cluster_labels == cluster_id]
         centroid = np.mean(cluster_points, axis=0)
         variance = np.mean(np.sum((cluster_points - centroid) ** 2, axis=1))
@@ -81,8 +81,9 @@ if __name__ == "__main__":
         x=np.linspace(1, max_trials, max_trials),
         y=variances,
         xlabel="Number of Clusters",
-        ylabel="Variation Score",
+        ylabel="Mean Intra Cluster Variance",
         colors=colors,
+        title = "fuzzy"
     )
     # PLot the Euclidean distances
     plot_Scatter(

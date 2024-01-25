@@ -12,8 +12,8 @@ if __name__ == "__main__":
     data = utils.load_data()
     data = utils.min_max_nomalization_pandas(data)
     data_np = data.to_numpy()
-    n_clusters = 3
-    clustering = AgglomerativeClustering(n_clusters=n_clusters).fit(data_np)
+    n_clusters = 11
+    clustering = AgglomerativeClustering(n_clusters=n_clusters, linkage="complete").fit(data_np)
     cluster_labels = clustering.labels_
     silhouette_avg = silhouette_score(data_np, cluster_labels)
 

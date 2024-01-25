@@ -3,14 +3,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-df = pd.read_csv('MLP_results.csv')
+
+df = pd.read_csv('Python/classification/examples/MLP/results/MLP_results.csv')
 
 accuracy= df['Accuracy']*100
 k_folds =  list(range(len(df)))
 data_Accuracy= pd.DataFrame({'K-Fold': k_folds, 'Accuracy': accuracy})
 
-# Sort the DataFrame by Accuracy
-data_Accuracy= data_Accuracy.sort_values(by='Accuracy', ascending=False)
 
 # Set the color palette
 sns.set_palette("BuGn")

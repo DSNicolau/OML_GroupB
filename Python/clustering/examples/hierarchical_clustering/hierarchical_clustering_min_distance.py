@@ -10,7 +10,7 @@ from sklearn.metrics import silhouette_score
 
 
 def hierarchical_clustering(n_clusters, data_np):
-    clustering = AgglomerativeClustering(n_clusters=n_clusters, linkage="average").fit(data_np)
+    clustering = AgglomerativeClustering(n_clusters=n_clusters, linkage="complete").fit(data_np)
     cluster_labels = clustering.labels_
     silhouette = 0
     if n_clusters > 1:
@@ -78,8 +78,9 @@ if __name__ == "__main__":
         x=np.linspace(1, max_trials, max_trials),
         y=variances,
         xlabel="Number of Clusters",
-        ylabel="Variation Score",
+        ylabel="Mean Intra Cluster Variance",
         colors=colors,
+        title='complete'
     )
     # PLot the Euclidean distances
     plot_Scatter(

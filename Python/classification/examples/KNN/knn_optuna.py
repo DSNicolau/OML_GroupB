@@ -38,6 +38,7 @@ if __name__ == "__main__":
         study_name="knn_neighbours_p_study_filter_butterworth",
         load_if_exists=True,
     )
+
     study.optimize(objective, n_trials=40)
     # To then visualize the results on the database:
     # please install optuna-dashboard (pip install optuna-dashboard)

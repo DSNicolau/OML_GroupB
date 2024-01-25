@@ -30,29 +30,29 @@ if __name__ == "__main__":
     data['combined_datetime'] = combined_datetime
     data.set_index('combined_datetime', inplace=True)
 
-    # plt.plot(data['seasonal'].iloc[:1440*3])
-    # plt.show()
-
-    plt.figure(figsize=(12, 8))
-    plt.subplot(4, 1, 1)
-    plt.plot(data['temperature'].iloc[1440*7:1440*15] , label='Original')
-    plt.legend(loc='upper left')
-    plt.title('Original Time Series')
-
-    plt.subplot(4, 1, 2)
-    plt.plot(data['trend'].iloc[1440*7:1440*15] , label='Trend')
-    plt.legend(loc='upper left')
-    plt.title('Trend Component')
-
-    plt.subplot(4, 1, 3)
-    plt.plot(data['seasonal'].iloc[1440*7:1440*15] , label='Seasonal')
-    plt.legend(loc='upper left')
-    plt.title('Seasonal Component')
-
-    plt.subplot(4, 1, 4)
-    plt.plot(data['residual'].iloc[1440*7:1440*15] , label='Residual')
-    plt.legend(loc='upper left')
-    plt.title('Residual Component')
-
-    plt.tight_layout()
+    plt.plot(data['seasonal'].iloc[:1440*3])
     plt.show()
+
+    # plt.figure(figsize=(12, 8))
+    # plt.subplot(4, 1, 1)
+    # plt.plot(data['temperature'].iloc[1440*7:1440*15] , label='Original')
+    # plt.legend(loc='upper left')
+    # plt.title('Original Time Series')
+
+    # plt.subplot(4, 1, 2)
+    # plt.plot(data['trend'].iloc[1440*7:1440*15] , label='Trend')
+    # plt.legend(loc='upper left')
+    # plt.title('Trend Component')
+
+    # plt.subplot(4, 1, 3)
+    # plt.plot(data['seasonal'].iloc[1440*7:1440*15] , label='Seasonal')
+    # plt.legend(loc='upper left')
+    # plt.title('Seasonal Component')
+
+    # plt.subplot(4, 1, 4)
+    # plt.plot(data['residual'].iloc[1440*7:1440*15] , label='Residual')
+    # plt.legend(loc='upper left')
+    # plt.title('Residual Component')
+
+    # plt.tight_layout()
+    # plt.show()
