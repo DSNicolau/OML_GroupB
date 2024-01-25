@@ -3,7 +3,8 @@ sys.path.append('Python/')
 from clustering.models.k_means import K_Means
 from clustering.utils.utils import load_data, min_max_nomalization
 
-import optuna
+from sklearn.cluster import KMeans
+import numpy as np
 
 seed = 123
 
@@ -15,38 +16,30 @@ print("data_np: ", data_np)
 # Normalization
 points = min_max_nomalization(data_np)
 
-# trial_num_trials = 10
-# trial_k = 3
+num_trials = 100
+# k = 8
+k = 3
 
 # model = K_Means(random_seed=seed)
-# k_means_centroids = model.fit(points, trial_k, trial_num_trials)
-# k_means_variances = model.trial_variances
-# min_variance = min(k_means_variances)
+# k_means_centroids = model.fit(points, k, num_trials)
+# closest_clusters = model.closest_centroid()
 
-# from sklearn.cluster import KMeans
-# kmeans = KMeans(n_clusters=2, random_state=0, n_init="auto").fit(X)
+kmeans = KMeans(n_clusters=k, random_state=seed, n_init=num_trials, max_iter=1000).fit(points)
 
-def objective(trial):
-    # trial_num_trials = trial.suggest_int('num_trials', 3, 30, log=False)
-    trial_num_trials = 50
-    trial_k = trial.suggest_int('k', 1, 100, log=False)
+closest_clusters = kmeans.predict(points)
 
-    model = K_Means(random_seed=seed)
-    k_means_centroids = model.fit(points, trial_k, trial_num_trials)
-    k_means_variances = model.trial_variances
-    min_variance = min(k_means_variances)
-    return min_variance
+from evaluation import plots
+plots.plot3D_numpy(data_np, 
+                    axis_labels=["Temperature (°C)", "Humidity (%)", "CO Value (ppm)"], 
+                    title="k-means centroids",
+                    point_size=1,
+                    color=closest_clusters,
+                #    color=model.closest_centroid(),
+                    color_map="viridis", 
+                    show_colorbar=False)
 
-studyName = "OML_K_Means_k_study_Test_v2"
+# from sklearn.metrics import silhouette_score
+# silhouette_avg = silhouette_score(points, closest_clusters)
 
-study = optuna.create_study(
-                            # directions=['maximize', 'maximize'],
-                            direction='minimize',
-                            # storage="sqlite:////nfs/home/nvasconcellos.it/softLinkTests/xDNN_test.db",
-                            storage="sqlite:///OML_Database.db",
-                            study_name=studyName, load_if_exists=True)
-
-for i in range(1, 51):
-    study.enqueue_trial({"k": i})
-
-study.optimize(objective, n_trials=10)
+# print("For n_clusters =", k, "The average silhouette_score is :", silhouette_avg)
+# plots.plot_Silhouette(x=points, y=closest_clusters, silhouette_avg=silhouette_avg)

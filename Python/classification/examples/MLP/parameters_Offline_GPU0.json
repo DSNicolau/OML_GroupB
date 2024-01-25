@@ -26,7 +26,7 @@
         "Function": "MSE"
     },
     "Hardware": {
-        "GPU": 1
+        "GPU": 0
     },
     "ReduceLROnPlateau": {
         "mode": "min", 
@@ -42,6 +42,6 @@
     "EarlyStopping": {
         "patience": 52, 
         "verbose": true, 
-        "delta": 0
+        "delta": 1e-07
     }
 }

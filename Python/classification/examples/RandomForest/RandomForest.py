@@ -7,7 +7,60 @@ from utils import utils
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 
-data = utils.load_data()
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import cohen_kappa_score
+from sklearn.metrics import confusion_matrix
+
+from matplotlib import pyplot as plt
+import seaborn as sns
+sns.set()
+
+import optuna
+
+def displayConfMatrix(cf_matrix, resultsModel_dir_): 
+    group_names = ['True Neg','False Pos','False Neg', 'True Pos']
+
+    group_counts = ["{0:0.0f}".format(value) for value in
+                    cf_matrix.flatten()]
+
+    group_percentages = ["{0:.2%}".format(value) for value in
+                        cf_matrix.flatten()/np.sum(cf_matrix)]
+    # group_percentages = []
+    
+    for i in range(cf_matrix.shape[0]):
+        for value in (cf_matrix[i].flatten()/np.sum(cf_matrix[i])):
+            group_percentages.append("{0:.2%}".format(value))
+
+    labels = [f"{v1}\n{v2}\n{v3}" for v1, v2, v3 in
+            zip(group_names,group_counts,group_percentages)]
+
+    labels = np.asarray(labels).reshape(2,2)
+
+    plt.figure()
+    ax = sns.heatmap(cf_matrix, annot=labels, fmt='', cmap='Blues')
+
+    ax.set_title('Confusion Matrix with labels\n\n')
+    ax.set_xlabel('\nPredicted Values')
+    ax.set_ylabel('Actual Values ')
+
+    ## Ticket labels - List must be in alphabetical order
+    ax.xaxis.set_ticklabels(['Non-Motion', 'Motion'])
+    ax.yaxis.set_ticklabels(['Non-Motion', 'Motion'])
+    
+    # # Create the results directory
+    # resultsModel_dir = folder_dir + '/results/' + model_name 
+    # if not os.path.exists(resultsModel_dir):
+    #     os.mkdir(resultsModel_dir)
+
+    ## Display the visualization of the Confusion Matrix.  
+    figure_name = resultsModel_dir_ + '/Confution_Matrix.png'
+    plt.gcf().set_size_inches(8, 6)
+    plt.savefig(figure_name)
+
+data = utils.load_data_v2()
 train_data, val_data, test_data = data
 train_x, train_y = train_data
 val_x, val_y = val_data
@@ -76,28 +129,75 @@ X_train, y_train = train_x, train_y
 X_val, y_val = val_x, val_y
 X_test, y_test = test_x, test_y
 
-# Balance dataset
-print("Balancing dataset...")
-print("Training set:")
-X_train, y_train = balance_dataset(X_train, y_train, rate_pos=0.5)
-print("Validation set:")
-X_val, y_val = balance_dataset(X_val, y_val, rate_pos=0.5)
-print("Test set:")
-X_test, y_test = balance_dataset(X_test, y_test, rate_pos=0.5)
-
-clf = RandomForestClassifier(random_state=42, n_estimators=100, max_depth=10)
-
-clf.fit(X_train, y_train)
+# # Balance dataset
+# print("Balancing dataset...")
+# print("Training set:")
+# X_train, y_train = balance_dataset(X_train, y_train, rate_pos=0.5)
+# print("Validation set:")
+# X_val, y_val = balance_dataset(X_val, y_val, rate_pos=0.5)
+# print("Test set:")
+# X_test, y_test = balance_dataset(X_test, y_test, rate_pos=0.5)
 
 
-# Calculate Accuracy
-from sklearn.metrics import accuracy_score
+def objective(trial):
+    
+    trial_num_estimators = trial.suggest_int("n_estimators", 10, 500)
+    trial_max_depth = trial.suggest_int("max_depth", 1, 100)
 
-# Train Accuracy
-train_y_pred = clf.predict(X_train)
-train_accuracy = accuracy_score(y_train, train_y_pred)
-print("Train Accuracy:", train_accuracy)
+    clf = RandomForestClassifier(random_state=123, n_estimators=trial_num_estimators, max_depth=trial_max_depth)
 
-y_pred = clf.predict(X_val)
-accuracy = accuracy_score(y_val, y_pred)
-print("Validation Accuracy:", accuracy)
+    clf.fit(X_train, y_train)
+
+    # Train Accuracy
+    train_y_pred = clf.predict(X_train)
+    train_accuracy = accuracy_score(y_train, train_y_pred)
+    print("Train Accuracy:", train_accuracy)
+
+    val_y_pred = clf.predict(X_val)
+    val_accuracy = accuracy_score(y_val, val_y_pred)
+    print("Validation Accuracy:", val_accuracy)
+    
+    # Test Results
+    resultsDir = "/nfs/home/nvasconcellos.it/softLinkTests/Optimizacao/OML_GroupB/Python/classification/examples/RandomForest/results/%s/Trial_%d" % (studyName, trial.number)
+    if not os.path.exists(resultsDir):
+        os.makedirs(resultsDir)    
+    
+    y_pred = clf.predict(X_test)
+    
+    accuracy = accuracy_score(test_y, y_pred)
+    precision = precision_score(test_y, y_pred)
+    recall = recall_score(test_y, y_pred)
+    f1 = f1_score(test_y, y_pred)
+    cohen_kappa = cohen_kappa_score(test_y, y_pred)
+    cf_matrix = confusion_matrix(test_y, y_pred)
+    
+    # Print Test Results
+    print("Test Results:")
+    print("Accuracy:", accuracy)
+    print("Precision:", precision)
+    print("Recall:", recall)
+    print("F1:", f1)
+    print("Cohen Kappa:", cohen_kappa)
+    
+    displayConfMatrix(cf_matrix, resultsDir)
+
+    with open(resultsDir + '/results.txt', 'w') as f:
+        f.write("Test Results: \n\n")
+        f.write("Accuracy: " + str(accuracy) + "\n")
+        f.write("Precision: " + str(precision) + "\n")
+        f.write("Recall: " + str(recall) + "\n")
+        f.write("F1: " + str(f1) + "\n")
+        f.write("Cohen Kappa: " + str(cohen_kappa) + "\n")
+        
+    # return train_accuracy, val_accuracy
+    return accuracy
+        
+studyName = "OML_RandomForest_Acc_study_Test_v2"
+
+study = optuna.create_study(
+                            # directions=['maximize', 'maximize'],
+                            direction='maximize',
+                            storage="sqlite:///OML_Database.db",
+                            study_name=studyName, load_if_exists=True)
+
+study.optimize(objective, n_trials=100)

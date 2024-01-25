@@ -1,19 +1,30 @@
 import torch
 import torch.nn as nn
 
+activations = {
+    "relu": nn.ReLU(),
+    "sigmoid": nn.Sigmoid(),
+    "tanh": nn.Tanh()
+}
+
 class MotionNet(nn.Module):
-    def __init__(self, input_size=1, hidden_units=64, dropout_rate=0):
+    def __init__(self, input_size=1, hidden_layers=2, hidden_units=64, dropout_rate=0, activation="relu"):
         super(MotionNet, self).__init__()
-        self.linear = nn.Linear(input_size, hidden_units)
-        self.relu = nn.ReLU()
-        self.linear2 = nn.Linear(hidden_units, hidden_units) 
-        self.relu2 = nn.ReLU()
-        self.dropout = nn.Dropout(0.3)
-        self.linear3 = nn.Linear(hidden_units, hidden_units) 
-        self.relu3 = nn.ReLU()
-        self.dropout2 = nn.Dropout(0.3)
-        self.linear4 = nn.Linear(hidden_units, 2) 
-        self.relu4 = nn.ReLU()
+        if hidden_layers < 0:
+            raise ValueError('hidden_layers must be >= 0')
+        
+        self.hidden_layers = hidden_layers
+        
+        self.in_linear = nn.Linear(input_size, hidden_units)
+        self.in_activ = nn.ReLU()
+        
+        for i in range(hidden_layers):
+            self.add_module("linear{}".format(i+1), nn.Linear(hidden_units, hidden_units))
+            self.add_module("activ{}".format(i+1), activations[activation])
+            self.add_module("dropout{}".format(i+1), nn.Dropout(dropout_rate))
+                
+        self.out_linear = nn.Linear(hidden_units, 2) 
+        self.out_activ = activations[activation]
         self.softmax = nn.Softmax()
     # def _init_weights(self, module):
     #     if isinstance(module, nn.Linear):
@@ -21,13 +32,12 @@ class MotionNet(nn.Module):
     #         if module.bias is not None:
     #             module.bias.data.zero_()   
     def forward(self, x):
-        out = self.linear(x)
-        out = self.relu(out)
-        out = self.linear2(out)
-        out = self.relu2(out)
-        out = self.linear3(out)
-        out = self.relu3(out)
-        out = self.linear4(out)
-        out = self.relu4(out)
-        out = self.softmax(out)
+        out = self.in_linear(x)
+        out = self.in_activ(out)
+        for i in range(self.hidden_layers):
+            out = self._modules["linear{}".format(i+1)](out)
+            out = self._modules["activ{}".format(i+1)](out)
+            out = self._modules["dropout{}".format(i+1)](out)
+        out = self.out_linear(out)
+        out = self.out_activ(out)
         return out
