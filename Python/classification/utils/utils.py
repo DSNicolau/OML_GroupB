@@ -76,6 +76,29 @@ def load_data(normalize=False, rmv_trend_seasonal=False, normalise_time=False, f
     return train_data, val_data, test_data
 
 
+def load_data_v2(cross_validation=False, num_subdivisions=4):
+    data_pd = pd.read_excel("data/Datasets_Group_B_v2.xlsx", "Classification")
+    data_pd.dropna(inplace=True)
+    data_np = data_pd.to_numpy()
+    total_size = data_np.shape[0]
+    num_positive = (data_np[:,-1] == 1).sum()
+    per_positive = num_positive / total_size
+    print("Total size: ", total_size)
+    print("Number of positive: ", num_positive)
+    print("Percentage of positive: ", per_positive)
+    if not cross_validation:
+        train_size = int(total_size*0.64)
+        val_size = int(total_size*0.16)
+        train_data = data_np[0:train_size, :]
+        val_data = data_np[train_size:train_size+val_size, :]
+        test_data = data_np[train_size+val_size:, :]
+        return ((train_data[:, :-1], train_data[:, -1]), 
+                (val_data[:, :-1], val_data[:, -1]), 
+                (test_data[:, :-1], test_data[:, -1]))
+    else:
+        subsets = np.array_split(data_np, num_subdivisions)
+        return subsets
+
 def min_max_normalization_pandas(dataframe, min_values=None, max_values=None):
     if min_values is None or max_values is None:
         min_values = dataframe.min(axis=0)

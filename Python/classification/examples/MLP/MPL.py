@@ -21,7 +21,7 @@ import sys
 sys.path.append('Python/classification/')
 from utils import utils
 from utils import Generic_Functions as gf
-from MotionNet import MotionNet
+from models.MotionNet import MotionNet
 
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.vgg16 import preprocess_input
