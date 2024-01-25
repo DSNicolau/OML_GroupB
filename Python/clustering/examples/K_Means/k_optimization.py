@@ -3,7 +3,8 @@ import plotly.graph_objects as go
 
 import optuna 
 
-studyName = "OML_K_Means_k_study"
+# studyName = "OML_K_Means_k_study"
+studyName = "OML_K_Means_k_study_VarianceAndSilhouette"
 
 study = optuna.create_study(
                             # directions=['maximize', 'maximize'],
@@ -15,7 +16,8 @@ study = optuna.create_study(
 trials_df = study.trials_dataframe()
 print(trials_df)
 x = trials_df["params_k"][trials_df["state"] == "COMPLETE"]
-variations = trials_df["value"][trials_df["state"] == "COMPLETE"]
+# variations = trials_df["value"][trials_df["state"] == "COMPLETE"]
+silhouette = trials_df["values_1"][trials_df["state"] == "COMPLETE"]
 
 def find_best_k(y, x):
     d_y_dk = np.diff(y)
@@ -30,8 +32,10 @@ def find_best_k(y, x):
     score = np.sqrt(x_normalized**2 + y_normalized**2)
     return score
 
-score = find_best_k(variations, x)
-best = np.argmin(score)
+# score = find_best_k(variations, x)
+# best = np.argmin(score)
+score = silhouette
+best = np.argmax(score)
 colors = np.zeros_like(score)
 colors[best] = 1
 # Create scatter plot
@@ -59,7 +63,8 @@ fig = go.Figure(data=go.Scatter(
 fig.update_layout(
     title="",
     xaxis_title="Number of Clusters (k)",
-    yaxis_title="Euclidean Error",
+    yaxis_title="Silhouette Score",
+    # yaxis_title="Euclidean Error",
     # yaxis_title="Mean Intra Cluster Variance",
     # yaxis_title="$${ \Huge {\partial \sigma^2}/{\partial k} }$$",
     font=dict(
