@@ -41,7 +41,58 @@ import optuna
 
 import copy
 
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import cohen_kappa_score
+from sklearn.metrics import confusion_matrix
+
+from matplotlib import pyplot as plt
+import seaborn as sns
+sns.set()
+
 tbf = None # Gloabal Variable to load the TensorBoard_Functions Library
+
+def displayConfMatrix(cf_matrix, resultsModel_dir_): 
+    group_names = ['True Neg','False Pos','False Neg', 'True Pos']
+
+    group_counts = ["{0:0.0f}".format(value) for value in
+                    cf_matrix.flatten()]
+
+    group_percentages = ["{0:.2%}".format(value) for value in
+                        cf_matrix.flatten()/np.sum(cf_matrix)]
+    # group_percentages = []
+    
+    for i in range(cf_matrix.shape[0]):
+        for value in (cf_matrix[i].flatten()/np.sum(cf_matrix[i])):
+            group_percentages.append("{0:.2%}".format(value))
+
+    labels = [f"{v1}\n{v2}\n{v3}" for v1, v2, v3 in
+            zip(group_names,group_counts,group_percentages)]
+
+    labels = np.asarray(labels).reshape(2,2)
+
+    plt.figure()
+    ax = sns.heatmap(cf_matrix, annot=labels, fmt='', cmap='Blues')
+
+    ax.set_title('Confusion Matrix with labels\n\n')
+    ax.set_xlabel('\nPredicted Values')
+    ax.set_ylabel('Actual Values ')
+
+    ## Ticket labels - List must be in alphabetical order
+    ax.xaxis.set_ticklabels(['Non-Motion', 'Motion'])
+    ax.yaxis.set_ticklabels(['Non-Motion', 'Motion'])
+    
+    # # Create the results directory
+    # resultsModel_dir = folder_dir + '/results/' + model_name 
+    # if not os.path.exists(resultsModel_dir):
+    #     os.mkdir(resultsModel_dir)
+
+    ## Display the visualization of the Confusion Matrix.  
+    figure_name = resultsModel_dir_ + '/Confution_Matrix.png'
+    plt.gcf().set_size_inches(8, 6)
+    plt.savefig(figure_name)
 
 class DatasetSequence(Dataset):
     def __init__(self, x, y):
@@ -262,6 +313,16 @@ def run(config_dic : dict, **kwargs):
     else:
         config_dic["Hyperparameters"]["L2_regularization_factor"] = 0.0
 
+    if kwargs.get("activation") is not None:
+        config_dic["Hyperparameters"]["activation"] = kwargs.get("activation")
+    else:
+        config_dic["Hyperparameters"]["activation"] = "relu"
+    
+    if kwargs.get("hidden_layers") is not None:
+        config_dic["Hyperparameters"]["hidden_layers"] = kwargs.get("hidden_layers")
+    else:
+        config_dic["Hyperparameters"]["hidden_layers"] = 0
+
     # Directories Definition
     base_algoritm_dir = config_dic["Directories"]["base_algoritm_dir"]
     if kwargs.get("exp_name") is not None:
@@ -352,7 +413,9 @@ def run(config_dic : dict, **kwargs):
 
     model = MotionNet(input_size=config_dic["Hyperparameters"]["input_size"],
                       hidden_units=config_dic["Hyperparameters"]["hidden_units"], 
-                      dropout_rate=config_dic["Hyperparameters"]["dropout_rate"])
+                      dropout_rate=config_dic["Hyperparameters"]["dropout_rate"], 
+                      activation=config_dic["Hyperparameters"]["activation"],
+                      hidden_layers=config_dic["Hyperparameters"]["hidden_layers"])
 
     # model.eval()
     device = torch.device(torch_device if torch.cuda.is_available() else "cpu")
@@ -397,26 +460,33 @@ def run(config_dic : dict, **kwargs):
         # Plot the training and validation DisAng
         gf.plot_metrics(history, "DisAng", figuresDir)
 
+    # Evaluate the model on the test data
+    test_x, test_y = kwargs["test_data"]
+    test_x = torch.from_numpy(test_x).to(torch.float32)
+    
+    model.eval()
+    outputs = model(test_x.to(device))
+    y_pred = torch.argmax(outputs, dim=1).cpu().detach().numpy()
+
+    accuracy = accuracy_score(test_y, y_pred)
+    precision = precision_score(test_y, y_pred)
+    recall = recall_score(test_y, y_pred)
+    f1 = f1_score(test_y, y_pred)
+    cohen_kappa = cohen_kappa_score(test_y, y_pred)
+    cf_matrix = confusion_matrix(test_y, y_pred)
+
+    displayConfMatrix(cf_matrix, resultsDir)
+
+    with open(resultsDir + '/results.txt', 'w') as f:
+        f.write("Test Results: \n\n")
+        f.write("Accuracy: " + str(accuracy) + "\n")
+        f.write("Precision: " + str(precision) + "\n")
+        f.write("Recall: " + str(recall) + "\n")
+        f.write("F1: " + str(f1) + "\n")
+        f.write("Cohen Kappa: " + str(cohen_kappa) + "\n")
+
+
     return max(history["val"]["Accuracy"])
-
-loaded_data = utils.load_data()
-train_data, val_data, test_data = loaded_data
-train_x, train_y = train_data
-val_x, val_y = val_data
-test_x, test_y = test_data
-
-# Remove the time information from the data
-train_x = train_x[:, 5:]
-val_x = val_x[:, 5:]
-test_x = test_x[:, 5:]
-
-# Normalize the data
-min_features = train_x.min(axis=0)
-max_features = train_x.max(axis=0)
-
-train_x = (train_x - min_features) / (max_features - min_features)
-val_x = (val_x - min_features) / (max_features - min_features)
-test_x = (test_x - min_features) / (max_features - min_features)
 
 def create_sequences(data_x, data_y, lookback, flatten=False):
     """Transform a time series into a prediction dataset
@@ -511,13 +581,8 @@ def balance_dataset(x, y, rate_pos):
 
 
 def objective(trial):
-    global train_x, train_y, val_x, val_y
-    
-    train_x = (train_x.copy() - 0.5) * 2
-    train_y = train_y.copy()
-    val_x = (val_x.copy() - 0.5) * 2
-    val_y = val_y.copy()
-    
+    global train_x, train_y, val_x, val_y, test_x, test_y
+        
     # train_x = (np.random.rand(train_x.shape[0], train_x.shape[1]) - 0.5) * 2
     # train_y = np.random.randint(2, size=train_y.shape[0])
     # val_x = (np.random.rand(val_x.shape[0], val_x.shape[1]) - 0.5) * 2
@@ -533,10 +598,20 @@ def objective(trial):
     
     trial_batch_size = trial.suggest_int("batch_size",512,2048,log=False)
     trial_lr = trial.suggest_float("learning_rate", 1e-6, 1e-2, log=True)
-    trial_dropout_rate = trial.suggest_float("dropout_rate", 0.0, 1, log=False)
-    trial_L2_regularization_factor = trial.suggest_float("L2_regularization_factor", 1e-6, 1e-4, log=True)
-    trial_hidden_units = trial.suggest_int("hidden_units", 16, 64, log=False)
-    input_size = train_x.shape[1]
+    
+    # trial_dropout_rate = trial.suggest_float("dropout_rate", 0.0, 1, log=False)
+    # trial_L2_regularization_factor = trial.suggest_float("L2_regularization_factor", 1e-6, 1e-4, log=True)
+    # trial_hidden_layers = trial.suggest_int("hidden_layers", 1, 5, log=False)
+    # trial_hidden_units = trial.suggest_int("hidden_units", 16, 64, log=False)
+    # trial_ActivationFunction = trial.suggest_categorical("ActivationFunction", ["relu", "sigmoid", "tanh"])
+    
+    trial_dropout_rate = 0.2877382251798777
+    trial_L2_regularization_factor = 4.274361601215326e-06
+    trial_hidden_layers = 5
+    trial_hidden_units = 20
+    trial_ActivationFunction = "tanh"
+    
+    input_size = x_train.shape[1]
     
     # Print hyperparameters
     print("Batch size: ", trial_batch_size)
@@ -544,12 +619,12 @@ def objective(trial):
     print("Input size: ", input_size)
     print("Hidden units: ", trial_hidden_units)
     
-    # Balance dataset
-    print("Balancing dataset...")
-    print("Training set:")
-    x_train, y_train = balance_dataset(x_train, y_train, rate_pos=0.5)
-    print("Validation set:")
-    x_val, y_val = balance_dataset(x_val, y_val, rate_pos=0.5)
+    # # Balance dataset
+    # print("Balancing dataset...")
+    # print("Training set:")
+    # x_train, y_train = balance_dataset(x_train, y_train, rate_pos=0.5)
+    # print("Validation set:")
+    # x_val, y_val = balance_dataset(x_val, y_val, rate_pos=0.5)
 
     config_dic = json.load(open(config_file_path))
     
@@ -563,23 +638,91 @@ def objective(trial):
                                     hidden_units=trial_hidden_units,
                                     train_data=(x_train, y_train),
                                     val_data=(x_val, y_val),
+                                    test_data=(test_x, test_y),
                                     dropout_rate=trial_dropout_rate,
                                     L2_regularization_factor=trial_L2_regularization_factor,
                                     layer_from_FT = None,
+                                    hidden_layers = trial_hidden_layers,
+                                    activation = trial_ActivationFunction,
                                     exp_name= results_dir)  
     
     return val_acc
 
-config_file_path = "/nfs/home/nvasconcellos.it/softLinkTests/Optimizacao/OML_GroupB/Python/classification/Examples/MLP/parameters_Offline_GPU0.json"
+
+# Dictionary with the permutations of 4
+idx = {
+    0:  [0, 1, 2, 3],
+    1:  [0, 1, 3, 2],
+    2:  [0, 2, 1, 3],
+    3:  [0, 2, 3, 1],
+    4:  [0, 3, 1, 2],
+    5:  [0, 3, 2, 1],
+    6:  [1, 0, 2, 3],
+    7:  [1, 0, 3, 2],
+    8:  [1, 2, 0, 3],
+    9:  [1, 2, 3, 0],
+    10: [1, 3, 0, 2],
+    11: [1, 3, 2, 0],
+    12: [2, 0, 1, 3],
+    13: [2, 0, 3, 1],
+    14: [2, 1, 0, 3],
+    15: [2, 1, 3, 0],
+    16: [2, 3, 0, 1],
+    17: [2, 3, 1, 0],
+    18: [3, 0, 1, 2],
+    19: [3, 0, 2, 1],
+    20: [3, 1, 0, 2],
+    21: [3, 1, 2, 0],
+    22: [3, 2, 0, 1],
+    23: [3, 2, 1, 0]
+}
+
+# loaded_data = utils.load_data_v2()
+# train_data, val_data, test_data = loaded_data
+# train_x, train_y = train_data
+# val_x, val_y = val_data
+# test_x, test_y = test_data
 
 
+# Study iterations idxs 8 studies with 3 idxs each
+iters_run = [list(range(i, i+3)) for i in range(0, 24, 3)]
 
-studyName = "OML_MLP_Test_v2"
+run_number = 0
 
-study = optuna.create_study(
-                            # directions=['maximize', 'maximize'],
-                            direction='maximize',
-                            storage="sqlite:////nfs/home/nvasconcellos.it/softLinkTests/xDNN_test.db",
-                            study_name=studyName, load_if_exists=True)
+config_file_path = "/nfs/home/nvasconcellos.it/softLinkTests/Optimizacao/OML_GroupB/Python/classification/examples/MLP/parameters_Offline_GPU0.json"
 
-study.optimize(objective, n_trials=5)
+for cross_validation_iter in iters_run[run_number]:
+    subset_idx = idx[cross_validation_iter]
+
+    loaded_data = utils.load_data_v2(cross_validation=True, num_subdivisions=4)
+    train_data, val_data, test_data = (np.concatenate((loaded_data[subset_idx[0]], 
+                                                    loaded_data[subset_idx[1]]), axis=0), 
+                                    loaded_data[subset_idx[2]], 
+                                    loaded_data[subset_idx[3]])
+    train_x, train_y = train_data[:, :-1], train_data[:, -1]
+    val_x, val_y = val_data[:, :-1], val_data[:, -1]
+    test_x, test_y = test_data[:, :-1], test_data[:, -1]
+
+    # Remove the time information from the data
+    train_x = train_x[:, 5:]
+    val_x = val_x[:, 5:]
+    test_x = test_x[:, 5:]
+
+    # Normalize the data
+    min_features = train_x.min(axis=0)
+    max_features = train_x.max(axis=0)
+
+    train_x = (train_x - min_features) / (max_features - min_features)
+    val_x = (val_x - min_features) / (max_features - min_features)
+    test_x = (test_x - min_features) / (max_features - min_features)
+
+    studyName = "OML_MLP_CrossValidation_study_%d" % cross_validation_iter
+
+    study = optuna.create_study(
+                                # directions=['maximize', 'maximize'],
+                                direction='maximize',
+                                storage="sqlite:///OML_Database.db",
+                                study_name=studyName, load_if_exists=True)
+
+    study.optimize(objective, n_trials=50)
+
