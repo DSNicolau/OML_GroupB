@@ -33,20 +33,13 @@ The directories have the following information:
 
 - **Orange:** Contains scripts for clustering and classification studies performed with the Orange framework.
 - **Python/classification:** Scripts for classification studies developed in Python.
-
-**Python/clustering:** Scripts for clustering studies developed in Python.
-
-**data:** Dataset used for the project.
-
-**evaluation:** Scripts with functions for plotting results and evaluating models.
-
-**examples:** Contains directories with different explored models.
-
-**models:** Contains some model classes created from scratch.
-
-**Preprocessing:** Contains preprocessing functions developed for study and exploration.
-
-**utils:** Additional scripts essential to the study.
+- **Python/clustering:** Scripts for clustering studies developed in Python.
+- **data:** Dataset used for the project.
+- **evaluation:** Scripts with functions for plotting results and evaluating models.
+- **examples:** Contains directories with different explored models.
+- **models:** Contains some model classes created from scratch.
+- **Preprocessing:** Contains preprocessing functions developed for study and exploration.
+- **utils:** Additional scripts essential to the study.
 
 
 ## Note
