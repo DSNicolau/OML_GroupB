@@ -31,8 +31,7 @@ Our project adheres to a specific order as depicted below:
 
 The directories have the following information:
 
-**Orange:** Contains scripts for clustering and classification studies performed with the Orange framework.
-
+**Orange:** Contains scripts for clustering and classification studies performed with the Orange framework.\\
 **Python/classification:** Scripts for classification studies developed in Python.
 
 **Python/clustering:** Scripts for clustering studies developed in Python.
